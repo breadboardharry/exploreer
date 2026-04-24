@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/* src/styles.css (ou index.css) */
+:root {
+  font-family: "Segoe UI", system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: #f8f9fa; /* Raccord avec ta page Home */
+  overflow: hidden; /* Pratique pour les apps de bureau pour éviter le scroll global */
+}
+
+/* Supprime les styles par défaut des liens et boutons si besoin */
+* {
+  box-sizing: border-box;
+}
