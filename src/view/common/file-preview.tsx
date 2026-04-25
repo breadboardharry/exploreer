@@ -1,4 +1,5 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { cn } from "../../lib/utils/style.utils";
 import React from "react";
 import {
   MdCode,
@@ -18,17 +19,11 @@ interface PreviewProps {
 const ImagePreview: React.FC<PreviewProps> = ({ path, name, className }) => {
   // convertFileSrc transforme le chemin local en URL lisible par la webview
   const imageSrc = convertFileSrc(path);
-  console.log(
-    "ImagePreview - Chemin converti :",
-    imageSrc,
-    "pour le fichier :",
-    path,
-  );
   return (
     <img
       src={imageSrc}
       alt={name}
-      className={`object-cover rounded-md ${className}`}
+      className={cn("object-cover rounded-md select-none", className)}
     />
   );
 };

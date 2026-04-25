@@ -1,12 +1,10 @@
+import useExplorer from "@hooks/use-explorer";
 import { open } from "@tauri-apps/plugin-dialog";
-import React, { useState } from "react";
 
-interface HomeProps {
-  onSelectFolder: (path: string) => void;
-}
+interface HomeProps {}
 
-const Home: React.FC<HomeProps> = ({ onSelectFolder }) => {
-  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+const Home: React.FC<HomeProps> = () => {
+  const { directory, setDirectory } = useExplorer();
 
   const handleSelectFolder = async () => {
     try {
@@ -17,9 +15,7 @@ const Home: React.FC<HomeProps> = ({ onSelectFolder }) => {
       });
 
       if (selectedPath) {
-        setSelectedFolder(selectedPath as string);
-        // On déclenche le changement de page dans App.tsx
-        onSelectFolder(selectedPath as string);
+        setDirectory(selectedPath);
       }
     } catch (error) {
       console.error(
@@ -66,13 +62,13 @@ const Home: React.FC<HomeProps> = ({ onSelectFolder }) => {
         </button>
 
         {/* L'affichage du chemin (s'affichera un bref instant avant la transition vers l'Explorer) */}
-        {selectedFolder && (
+        {directory && (
           <div className="mt-8 pt-6 border-t border-dashed border-slate-200 flex flex-col gap-2">
             <span className="text-xs text-slate-400 uppercase tracking-wider font-medium">
               Sélection actuelle :
             </span>
             <code className="bg-slate-50 p-2 rounded-md text-sm text-slate-600 break-all border border-slate-200">
-              {selectedFolder}
+              {directory}
             </code>
           </div>
         )}
