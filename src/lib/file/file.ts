@@ -1,7 +1,6 @@
 import { join } from "@tauri-apps/api/path";
 import { readDir, stat } from "@tauri-apps/plugin-fs";
 import { EXTENSION_MAP } from "./extension";
-import { SizeRangeFilter } from "./size";
 
 export interface FileItem {
   // Nom du fichier avec extension
@@ -24,34 +23,6 @@ export type FileCategory =
   | "document"
   | "code"
   | "other";
-
-export interface FilterState {
-  // Un tableau de catégories sélectionnées (ex: ["image", "video"]), ou vide pour "tous"
-  categories: FileCategory[];
-  size?: SizeRangeFilter | undefined;
-  query?: string | undefined;
-}
-
-/**
- * Applique les filtres de catégorie, taille et recherche textuelle sur une liste de fichiers
- * @param files La liste de fichiers à filtrer
- * @param filter L'état des filtres à appliquer
- * @returns Une nouvelle liste de fichiers qui correspondent aux critères de filtrage
- */
-export const filterFiles = (
-  files: FileItem[],
-  { categories, size, query }: FilterState,
-): FileItem[] => {
-  return files.filter((file) => {
-    const matchesCategory =
-      categories.length === 0 ||
-      categories.includes(getFileCategory(file.extension));
-    const matchesSize = !size || size.contains(file.size);
-    const matchesQuery = !query || file.name.includes(query);
-
-    return matchesCategory && matchesSize && matchesQuery;
-  });
-};
 
 /**
  * Lit les fichiers d'un répertoire et retourne une liste de FileItem avec leurs métadonnées

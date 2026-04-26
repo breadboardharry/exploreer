@@ -76,12 +76,21 @@ export const RenameDialog = forwardRef<RenameDialogRef, RenameDialogProps>(
           <DialogFooter className="sm:justify-start">
             <Button
               type="button"
-              variant="outline"
-              onClick={() => setIsOpen(false)}
+              variant="ghost"
+              onClick={(e) => {
+                setIsOpen(false);
+                e.stopPropagation();
+              }}
             >
               Annuler
             </Button>
-            <Button type="submit" onClick={handleSubmit}>
+            <Button
+              type="submit"
+              onClick={(e) => {
+                handleSubmit();
+                e.stopPropagation();
+              }}
+            >
               Valider
             </Button>
           </DialogFooter>

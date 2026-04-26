@@ -1,4 +1,6 @@
-import { FileCategory, FilterState } from "@lib/file/file";
+import useExplorer from "@hooks/use-explorer";
+import { FileCategory } from "@lib/file/file";
+import { FilterState, TagFilterMode } from "@lib/file/filter";
 import {
   LargeSizeRange,
   MediumSizeRange,
@@ -21,13 +23,14 @@ import {
   MdImage,
   MdVideoLibrary,
 } from "react-icons/md";
+import { TagBadge } from "./tag-badge";
 
 interface FilterPopoverProps {
   trigger?: (props: {
     // Si les filtres sont à leur état par défaut (aucune catégorie, aucune taille)
     isDefault: boolean;
   }) => React.ReactElement;
-  filters: Pick<FilterState, "categories" | "size">;
+  filters: Pick<FilterState, "categories" | "size" | "tags">;
   onFilterChange: (newFilters: FilterState) => void;
 }
 const FilterPopover: React.FC<FilterPopoverProps> = ({
@@ -35,13 +38,27 @@ const FilterPopover: React.FC<FilterPopoverProps> = ({
   filters,
   onFilterChange,
 }) => {
+  const { tags } = useExplorer();
+
   // Petites fonctions utilitaires pour rendre le JSX plus propre
   const updateCategory = (categories: FileCategory[]) =>
     onFilterChange({ ...filters, categories });
   const updateSize = (size: SizeRangeFilter | undefined) =>
     onFilterChange({ ...filters, size });
+  const updateTagMode = (mode: FilterState["tags"]["mode"]) =>
+    onFilterChange({ ...filters, tags: { ...filters.tags, mode } });
+  const toggleTagSelection = (tagName: string) => {
+    const values = filters.tags.values.includes(tagName)
+      ? filters.tags.values.filter((t) => t !== tagName)
+      : [...filters.tags.values, tagName];
+    onFilterChange({ ...filters, tags: { ...filters.tags, values } });
+  };
   const resetFilters = () =>
-    onFilterChange({ categories: [], size: undefined });
+    onFilterChange({
+      categories: [],
+      size: undefined,
+      tags: { mode: "contains", values: [] },
+    });
 
   // Classes communes pour nos boutons de filtres (effet pilule)
   const basePillClass =
@@ -51,7 +68,11 @@ const FilterPopover: React.FC<FilterPopoverProps> = ({
   const inactivePillClass =
     "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300";
 
-  const isDefaultState = filters.categories.length === 0 && !filters.size;
+  const isDefaultState =
+    filters.categories.length === 0 &&
+    !filters.size &&
+    filters.tags.mode === "contains" &&
+    filters.tags.values.length === 0;
 
   return (
     <Popover>
@@ -195,6 +216,45 @@ const FilterPopover: React.FC<FilterPopoverProps> = ({
                 </span>
               </label>
             </div>
+          </div>
+
+          {/* --- SECTION 3 : TAGS --- */}
+          <div>
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+              Tags
+            </h3>
+
+            <select
+              value={filters.tags.mode}
+              onChange={(e) => updateTagMode(e.target.value as TagFilterMode)}
+              className="w-full mb-3 p-2 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-100"
+            >
+              <option value="contains-all">Contient tous les tags</option>
+              <option value="contains">Contient au moins un des tags</option>
+              <option value="excludes">Ne contient pas les tags</option>
+              <option value="empty">Sans aucun tag (Vide)</option>
+              <option value="not-empty">Possède des tags (Pas vide)</option>
+            </select>
+
+            {/* Liste des tags (affichée seulement si mode != vide/pas vide) */}
+            {(filters.tags.mode === "contains-all" ||
+              filters.tags.mode === "contains" ||
+              filters.tags.mode === "excludes") && (
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag) => (
+                  <TagBadge
+                    key={tag.name}
+                    name={tag.name}
+                    color={tag.color}
+                    clickable={true}
+                    onClick={() => toggleTagSelection(tag.name)}
+                    className={
+                      filters.tags.values.includes(tag.name) ? "" : "opacity-50"
+                    }
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </PopoverContent>

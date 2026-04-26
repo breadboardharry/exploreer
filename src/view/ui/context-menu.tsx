@@ -8,7 +8,7 @@ function ContextMenu({ ...props }: ContextMenuPrimitive.Root.Props) {
 
 function ContextMenuPortal({ ...props }: ContextMenuPrimitive.Portal.Props) {
   return (
-    <ContextMenuPrimitive.Portal data-slot="context-menu-portal" {...props} />
+    <ContextMenuPrimitive.Portal data-slot="context-menu-portal" {...props} inputMode="none"   />
   );
 }
 
@@ -118,9 +118,11 @@ function ContextMenuSubTrigger({
   className,
   inset,
   children,
+  icon = true,
   ...props
 }: ContextMenuPrimitive.SubmenuTrigger.Props & {
   inset?: boolean;
+  icon?: boolean;
 }) {
   return (
     <ContextMenuPrimitive.SubmenuTrigger
@@ -133,7 +135,7 @@ function ContextMenuSubTrigger({
       {...props}
     >
       {children}
-      <LuChevronRight className="cn-rtl-flip ml-auto" />
+      {icon && <LuChevronRight className="cn-rtl-flip ml-auto" />}
     </ContextMenuPrimitive.SubmenuTrigger>
   );
 }

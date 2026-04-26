@@ -1,15 +1,18 @@
-import { FileItem } from "@lib/file/file";
+import useExplorer from "@hooks/use-explorer";
+import { FileItemWithMetadata } from "@lib/file/file";
 import { formatSize } from "@lib/utils/file.utils";
 import { ViewMode } from "@view/pages/explorer.page";
 import React from "react";
 import { FilePreview } from "./file-preview";
 import { HighlightedText } from "./highlighted-text";
+import { TagBadge } from "./tag-badge";
 
 interface FileCardProps {
-  file: FileItem;
+  file: FileItemWithMetadata;
   viewMode: ViewMode;
   searchQuery?: string;
   isSelected?: boolean;
+  showTags?: boolean;
   onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   onDoubleClick?: () => void;
 }
@@ -19,9 +22,12 @@ const FileCard: React.FC<FileCardProps> = ({
   viewMode,
   searchQuery = "",
   isSelected,
+  showTags = false,
   onClick,
   onDoubleClick,
 }) => {
+  const { getTagColor } = useExplorer();
+
   // Les classes communes aux deux affichages (effets de survol, fond blanc)
   const baseClasses = `group border cursor-pointer transition-all ${
     isSelected
@@ -73,9 +79,20 @@ const FileCard: React.FC<FileCardProps> = ({
           className="font-medium text-slate-700 text-sm truncate pr-4 block flex-1 select-none"
         />
 
-        <div className="flex gap-8 text-xs text-slate-400">
-          <span className="w-24 text-right">{file.date.toLocaleString()}</span>
-          <span className="w-16 text-right font-mono">
+        <div className="flex items-center gap-8 text-xs text-slate-400">
+          {/* TAGS */}
+          {showTags && file.tags.length > 0 && (
+            <div className="flex items-center gap-1 max-w-50 overflow-hidden">
+              {file.tags.map((tag) => {
+                const tagColor = getTagColor(tag);
+                return <TagBadge key={tag} name={tag} color={tagColor} />;
+              })}
+            </div>
+          )}
+          {/* DATE */}
+          <span className="w-28 text-right">{file.date.toLocaleString()}</span>
+          {/* TAILLE */}
+          <span className="w-12 text-right font-mono">
             {formatSize(file.size)}
           </span>
         </div>

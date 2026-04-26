@@ -1,10 +1,12 @@
 import useExplorer from "@hooks/use-explorer";
 import useHistory from "@hooks/use-history";
+import usePreference from "@hooks/use-preference";
 import { cn } from "@lib/utils/style.utils";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
   Menubar,
+  MenubarCheckboxItem,
   MenubarContent,
   MenubarItem,
   MenubarMenu,
@@ -35,6 +37,7 @@ const ExplorerHeader: React.FC<ExplorerHeaderProps> = ({
   viewMode,
   onViewModeChange,
 }) => {
+  const { showTags, setShowTags } = usePreference();
   const { history, push: pushToHistory } = useHistory();
   const {
     setDirectory,
@@ -42,6 +45,8 @@ const ExplorerHeader: React.FC<ExplorerHeaderProps> = ({
     setFilters,
     refreshDirectory,
     selection,
+    manifest,
+    startFromZero,
     ...explorer
   } = useExplorer();
 
@@ -122,10 +127,15 @@ const ExplorerHeader: React.FC<ExplorerHeaderProps> = ({
           </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
-          <MenubarTrigger className={triggerStyle} disabled>
-            Affichage
-          </MenubarTrigger>
-          <MenubarContent></MenubarContent>
+          <MenubarTrigger className={triggerStyle}>Affichage</MenubarTrigger>
+          <MenubarContent>
+            <MenubarCheckboxItem
+              checked={showTags}
+              onCheckedChange={setShowTags}
+            >
+              Afficher les tags
+            </MenubarCheckboxItem>
+          </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
           <MenubarTrigger className={triggerStyle} disabled>
@@ -136,8 +146,16 @@ const ExplorerHeader: React.FC<ExplorerHeaderProps> = ({
         <MenubarMenu>
           <MenubarTrigger className={triggerStyle}>Debug</MenubarTrigger>
           <MenubarContent>
-            <MenubarItem onClick={() => console.log(explorer.manifest)}>
+            <MenubarItem onClick={() => console.log(manifest.getContent())}>
               Log manifest
+            </MenubarItem>
+            <MenubarItem
+              onClick={() => {
+                startFromZero();
+                console.log("Manifest réinitialisé à zéro");
+              }}
+            >
+              Reset manifest
             </MenubarItem>
           </MenubarContent>
         </MenubarMenu>

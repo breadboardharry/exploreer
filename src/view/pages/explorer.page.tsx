@@ -1,4 +1,5 @@
 import useExplorer from "@hooks/use-explorer";
+import usePreference from "@hooks/use-preference";
 import { ask } from "@tauri-apps/plugin-dialog";
 import ExplorerHeader from "@view/common/explorer-header";
 import { FileContextMenu } from "@view/common/file-context-menu";
@@ -14,6 +15,7 @@ interface ExplorerProps {}
 const Explorer: React.FC<ExplorerProps> = () => {
   const { filteredFiles, filters, loading, deleteFiles, selection } =
     useExplorer();
+  const { showTags } = usePreference();
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [viewingIndex, setViewingIndex] = useState<number>(-1);
@@ -113,6 +115,7 @@ const Explorer: React.FC<ExplorerProps> = () => {
                     searchQuery={filters.query}
                     viewMode={viewMode}
                     isSelected={selection.selectedKeys.has(file.path)}
+                    showTags={showTags}
                     onClick={(e) => {
                       e.stopPropagation(); // Empêche le clearSelection du <main>
                       // e.metaKey sert pour les utilisateurs Mac (Touche Cmd)
