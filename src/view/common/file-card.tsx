@@ -1,15 +1,16 @@
 import { FileItem } from "@lib/file/file";
+import { formatSize } from "@lib/utils/file.utils";
 import { ViewMode } from "@view/pages/explorer.page";
 import React from "react";
 import { FilePreview } from "./file-preview";
 import { HighlightedText } from "./highlighted-text";
-import { formatSize } from "@lib/utils/file.utils";
 
 interface FileCardProps {
   file: FileItem;
   viewMode: ViewMode;
   searchQuery?: string;
-  onClick?: () => void;
+  isSelected?: boolean;
+  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
   onDoubleClick?: () => void;
 }
 
@@ -17,12 +18,16 @@ const FileCard: React.FC<FileCardProps> = ({
   file,
   viewMode,
   searchQuery = "",
+  isSelected,
   onClick,
   onDoubleClick,
 }) => {
   // Les classes communes aux deux affichages (effets de survol, fond blanc)
-  const baseClasses =
-    "group bg-white border border-transparent cursor-pointer transition-all hover:border-blue-200 hover:bg-slate-50";
+  const baseClasses = `group border cursor-pointer transition-all ${
+    isSelected
+      ? "bg-blue-100/50 border-blue-400 ring-2 ring-blue-200" // État sélectionné
+      : "bg-white border-transparent hover:border-blue-200 hover:bg-slate-50" // État normal
+  }`;
 
   // --- RENDU VUE GRILLE ---
   if (viewMode === "grid") {
@@ -30,7 +35,7 @@ const FileCard: React.FC<FileCardProps> = ({
       <div
         onClick={onClick}
         onDoubleClick={onDoubleClick}
-        className={`${baseClasses} flex flex-col items-center text-center p-6 rounded-xl hover:shadow-lg hover:-translate-y-1`}
+        className={`${baseClasses} flex flex-col items-center text-center p-6 rounded-xl hover:shadow-lg`}
       >
         <div className="mb-4 text-blue-200 group-hover:text-blue-400 transition-colors flex items-center justify-center w-16 h-16">
           <FilePreview
@@ -70,7 +75,9 @@ const FileCard: React.FC<FileCardProps> = ({
 
         <div className="flex gap-8 text-xs text-slate-400">
           <span className="w-24 text-right">{file.date.toLocaleString()}</span>
-          <span className="w-16 text-right font-mono">{formatSize(file.size)}</span>
+          <span className="w-16 text-right font-mono">
+            {formatSize(file.size)}
+          </span>
         </div>
       </div>
     </div>

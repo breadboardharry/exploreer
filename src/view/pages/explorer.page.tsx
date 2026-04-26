@@ -1,6 +1,9 @@
 import useExplorer from "@hooks/use-explorer";
+import { ask } from "@tauri-apps/plugin-dialog";
 import ExplorerHeader from "@view/common/explorer-header";
+import { FileContextMenu } from "@view/common/file-context-menu";
 import { FileViewer } from "@view/common/file-viewer";
+import { SelectionBar } from "@view/common/selection-bar";
 import React, { useState } from "react";
 import FileCard from "../common/file-card";
 
@@ -9,11 +12,14 @@ export type ViewMode = "grid" | "list";
 interface ExplorerProps {}
 
 const Explorer: React.FC<ExplorerProps> = () => {
-  const { filteredFiles, filters, loading } = useExplorer();
+  const { filteredFiles, filters, loading, deleteFiles, selection } =
+    useExplorer();
+
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [viewingIndex, setViewingIndex] = useState<number>(-1);
 
   const isViewerOpen = viewingIndex !== -1;
+  const selectedCount = selection.selectedKeys.size;
 
   // La logique métier est centralisée ici !
   const handleNextFile = () => {
@@ -27,6 +33,28 @@ const Explorer: React.FC<ExplorerProps> = () => {
       setViewingIndex(
         (prev) => (prev - 1 + filteredFiles.length) % filteredFiles.length,
       );
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      const confirmed = await ask(
+        `Voulez-vous vraiment supprimer ces ${selectedCount} éléments ?`,
+        { title: "Suppression groupée", kind: "warning" },
+      );
+
+      if (confirmed) {
+        // On récupère les fichiers sélectionnés
+        const filesToDelete = filteredFiles.filter((f) =>
+          selection.selectedKeys.has(f.path),
+        );
+
+        await deleteFiles(filesToDelete);
+
+        selection.clear();
+      }
+    } catch (error) {
+      console.error("Erreur lors de la suppression groupée :", error);
     }
   };
 
@@ -47,6 +75,7 @@ const Explorer: React.FC<ExplorerProps> = () => {
       {/* --- ZONE PRINCIPALE --- */}
       <main
         className={`flex-1 p-6 md:p-8 ${isViewerOpen ? "overflow-hidden" : "overflow-y-auto"}`}
+        onClick={selection.clear}
       >
         {loading ? (
           <div className="flex justify-center items-center h-full text-slate-400">
@@ -73,20 +102,42 @@ const Explorer: React.FC<ExplorerProps> = () => {
             }
           >
             {/* On délègue l'affichage de chaque fichier au composant FileCard */}
-            {filteredFiles.map((file) => (
-              <FileCard
+            {filteredFiles.map((file, index) => (
+              <FileContextMenu
                 key={file.path}
                 file={file}
-                searchQuery={filters.query}
-                viewMode={viewMode}
-                onDoubleClick={() =>
-                  setViewingIndex(filteredFiles.indexOf(file))
-                }
-              />
+                trigger={() => (
+                  <FileCard
+                    key={file.path}
+                    file={file}
+                    searchQuery={filters.query}
+                    viewMode={viewMode}
+                    isSelected={selection.selectedKeys.has(file.path)}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Empêche le clearSelection du <main>
+                      // e.metaKey sert pour les utilisateurs Mac (Touche Cmd)
+                      selection.toggle(
+                        index,
+                        e.ctrlKey || e.metaKey,
+                        e.shiftKey,
+                      );
+                    }}
+                    onDoubleClick={() =>
+                      setViewingIndex(filteredFiles.indexOf(file))
+                    }
+                  />
+                )}
+              ></FileContextMenu>
             ))}
           </div>
         )}
       </main>
+
+      <SelectionBar
+        count={selectedCount}
+        onClear={selection.clear}
+        onDelete={handleBulkDelete}
+      />
     </div>
   );
 };

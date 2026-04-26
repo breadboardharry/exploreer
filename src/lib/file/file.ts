@@ -13,6 +13,10 @@ export interface FileItem {
   path: string;
 }
 
+export interface FileItemWithMetadata extends FileItem {
+  tags: string[];
+}
+
 export type FileCategory =
   | "image"
   | "video"
@@ -84,4 +88,15 @@ export const getFiles = async (directory: string): Promise<FileItem[]> => {
  */
 export const getFileCategory = (extension: string): FileCategory => {
   return EXTENSION_MAP[extension.toLowerCase()] || "other";
+};
+
+/**
+ * Supprime l'extension d'un nom de fichier
+ * @param filename Le nom du fichier avec extension
+ * @returns Le nom du fichier sans extension
+ */
+export const removeExtension = (filename: string): string => {
+  const lastDotIndex = filename.lastIndexOf(".");
+  if (lastDotIndex === -1) return filename;
+  return filename.slice(0, lastDotIndex);
 };

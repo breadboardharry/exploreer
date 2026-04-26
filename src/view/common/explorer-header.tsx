@@ -1,4 +1,6 @@
 import useExplorer from "@hooks/use-explorer";
+import useHistory from "@hooks/use-history";
+import { cn } from "@lib/utils/style.utils";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
@@ -7,6 +9,9 @@ import {
   MenubarItem,
   MenubarMenu,
   MenubarSeparator,
+  MenubarSub,
+  MenubarSubContent,
+  MenubarSubTrigger,
   MenubarTrigger,
 } from "@view/ui/menubar";
 import React from "react";
@@ -18,7 +23,6 @@ import {
   MdSearch,
 } from "react-icons/md";
 import FilterPopover from "./filter-popover";
-import { cn } from "@lib/utils/style.utils";
 
 export type ViewMode = "grid" | "list";
 
@@ -31,7 +35,15 @@ const ExplorerHeader: React.FC<ExplorerHeaderProps> = ({
   viewMode,
   onViewModeChange,
 }) => {
-  const { setDirectory, filters, setFilters } = useExplorer();
+  const { history, push: pushToHistory } = useHistory();
+  const {
+    setDirectory,
+    filters,
+    setFilters,
+    refreshDirectory,
+    selection,
+    ...explorer
+  } = useExplorer();
 
   const handleSelectFolder = async () => {
     console.log(
@@ -46,6 +58,7 @@ const ExplorerHeader: React.FC<ExplorerHeaderProps> = ({
 
       if (selectedPath) {
         setDirectory(selectedPath);
+        pushToHistory(selectedPath);
       }
     } catch (error) {
       console.error(
@@ -58,6 +71,10 @@ const ExplorerHeader: React.FC<ExplorerHeaderProps> = ({
   const handleCloseApp = async () => {
     const window = getCurrentWindow();
     await window.close();
+  };
+
+  const handleRefreshDirectory = () => {
+    refreshDirectory();
   };
 
   const triggerStyle =
@@ -74,6 +91,32 @@ const ExplorerHeader: React.FC<ExplorerHeaderProps> = ({
               <LuFolder />
               Ouvrir le dossier
             </MenubarItem>
+
+            <MenubarSub>
+              <MenubarSubTrigger disabled={!history.length}>
+                Ouvert récemment
+              </MenubarSubTrigger>
+              <MenubarSubContent>
+                {history.map((item, index) => (
+                  <MenubarItem
+                    key={index}
+                    onClick={() => {
+                      setDirectory(item);
+                      pushToHistory(item);
+                    }}
+                  >
+                    {item}
+                  </MenubarItem>
+                ))}
+              </MenubarSubContent>
+            </MenubarSub>
+            <MenubarSeparator />
+            <MenubarItem
+              onClick={handleRefreshDirectory}
+              disabled={!explorer.directory}
+            >
+              Recharger
+            </MenubarItem>
             <MenubarSeparator />
             <MenubarItem onClick={handleCloseApp}>Quitter</MenubarItem>
           </MenubarContent>
@@ -89,6 +132,14 @@ const ExplorerHeader: React.FC<ExplorerHeaderProps> = ({
             Outils
           </MenubarTrigger>
           <MenubarContent></MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+          <MenubarTrigger className={triggerStyle}>Debug</MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem onClick={() => console.log(explorer.manifest)}>
+              Log manifest
+            </MenubarItem>
+          </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
           <MenubarTrigger className={triggerStyle} disabled>
@@ -156,9 +207,10 @@ const ExplorerHeader: React.FC<ExplorerHeaderProps> = ({
             );
           }}
           filters={filters}
-          onFilterChange={(newFilters) =>
-            setFilters((prev) => ({ ...prev, ...newFilters }))
-          }
+          onFilterChange={(newFilters) => {
+            selection.clear();
+            setFilters((prev) => ({ ...prev, ...newFilters }));
+          }}
         />
       </div>
     </header>

@@ -1,9 +1,11 @@
 import useExplorer from "@hooks/use-explorer";
+import useHistory from "@hooks/use-history";
 import { open } from "@tauri-apps/plugin-dialog";
 
 interface HomeProps {}
 
 const Home: React.FC<HomeProps> = () => {
+  const { push: pushToHistory } = useHistory();
   const { directory, setDirectory } = useExplorer();
 
   const handleSelectFolder = async () => {
@@ -16,6 +18,7 @@ const Home: React.FC<HomeProps> = () => {
 
       if (selectedPath) {
         setDirectory(selectedPath);
+        pushToHistory(selectedPath);
       }
     } catch (error) {
       console.error(
