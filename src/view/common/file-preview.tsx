@@ -23,7 +23,7 @@ const ImagePreview: React.FC<PreviewProps> = ({ path, name, className }) => {
     <img
       src={imageSrc}
       alt={name}
-      className={cn("object-cover rounded-md select-none", className)}
+      className={cn("object-cover select-none", className)}
     />
   );
 };

@@ -47,7 +47,7 @@ const FileCard: React.FC<FileCardProps> = ({
           <FilePreview
             path={file.path}
             name={file.name}
-            className="w-12 h-12"
+            className="w-12 h-12 rounded-md"
           />
         </div>
         <div className="w-full">

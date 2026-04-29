@@ -4,6 +4,7 @@ import usePreference from "@hooks/use-preference";
 import { cn } from "@lib/utils/style.utils";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open } from "@tauri-apps/plugin-dialog";
+import { Button } from "@view/ui/button";
 import {
   Menubar,
   MenubarCheckboxItem,
@@ -17,7 +18,7 @@ import {
   MenubarTrigger,
 } from "@view/ui/menubar";
 import React from "react";
-import { LuFolder } from "react-icons/lu";
+import { LuFolder, LuPanelRight } from "react-icons/lu";
 import {
   MdFilterList,
   MdFormatListBulleted,
@@ -31,13 +32,18 @@ export type ViewMode = "grid" | "list";
 interface ExplorerHeaderProps {
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
+  showSidebar: boolean;
+  onToggleSidebar: () => void;
 }
 
 const ExplorerHeader: React.FC<ExplorerHeaderProps> = ({
   viewMode,
   onViewModeChange,
+  showSidebar,
+  onToggleSidebar,
 }) => {
-  const { showTags, setShowTags } = usePreference();
+  const { showTags, setShowTags, showDetails, setShowDetails } =
+    usePreference();
   const { history, push: pushToHistory } = useHistory();
   const {
     setDirectory,
@@ -47,13 +53,11 @@ const ExplorerHeader: React.FC<ExplorerHeaderProps> = ({
     selection,
     manifest,
     startFromZero,
+
     ...explorer
   } = useExplorer();
 
   const handleSelectFolder = async () => {
-    console.log(
-      "Ouverture de la boîte de dialogue pour sélectionner un dossier...",
-    );
     try {
       const selectedPath = await open({
         directory: true,
@@ -135,6 +139,12 @@ const ExplorerHeader: React.FC<ExplorerHeaderProps> = ({
             >
               Afficher les tags
             </MenubarCheckboxItem>
+            <MenubarCheckboxItem
+              checked={showDetails}
+              onCheckedChange={setShowDetails}
+            >
+              Afficher les détails
+            </MenubarCheckboxItem>
           </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
@@ -193,35 +203,41 @@ const ExplorerHeader: React.FC<ExplorerHeaderProps> = ({
 
         {/* Contrôles de vue */}
         <div className="flex gap-1 bg-slate-100 p-1 rounded-lg shrink-0">
-          <button
-            className={`p-1.5 rounded-md transition-all flex items-center justify-center ${viewMode === "grid" ? "bg-white text-blue-800 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`rounded-md transition-all flex items-center justify-center ${viewMode === "grid" ? "bg-white text-blue-800 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
             onClick={() => onViewModeChange("grid")}
             title="Vue Grille"
           >
             <MdGridView className="w-4 h-4" />
-          </button>
-          <button
-            className={`p-1.5 rounded-md transition-all flex items-center justify-center ${viewMode === "list" ? "bg-white text-blue-800 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`rounded-md transition-all flex items-center justify-center ${viewMode === "list" ? "bg-white text-blue-800 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
             onClick={() => onViewModeChange("list")}
             title="Vue Liste"
           >
             <MdFormatListBulleted className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
 
         <FilterPopover
           trigger={({ isDefault }) => {
             return (
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 className={cn(
-                  "p-2 bg-slate-100 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-100 shrink-0",
+                  "bg-slate-100 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-100 shrink-0",
                   !isDefault &&
                     "text-slate-50 bg-blue-500 hover:text-slate-50 hover:bg-blue-400 cursor-default shadow-[0_0_10px] shadow-blue-500/50",
                 )}
                 title="Filtrer les fichiers"
               >
                 <MdFilterList className="w-5 h-5" />
-              </button>
+              </Button>
             );
           }}
           filters={filters}
@@ -230,6 +246,22 @@ const ExplorerHeader: React.FC<ExplorerHeaderProps> = ({
             setFilters((prev) => ({ ...prev, ...newFilters }));
           }}
         />
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "bg-slate-100 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-100 shrink-0",
+            showSidebar &&
+              "text-slate-50 bg-blue-500 hover:text-slate-50 hover:bg-blue-400 cursor-default shadow-[0_0_10px] shadow-blue-500/50",
+          )}
+          title="Afficher le panneau latéral"
+          onClick={() => {
+            onToggleSidebar();
+          }}
+        >
+          <LuPanelRight className="w-4 h-4" />
+        </Button>
       </div>
     </header>
   );
