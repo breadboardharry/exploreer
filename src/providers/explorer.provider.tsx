@@ -277,7 +277,11 @@ const ExplorerProvider: React.FC<ExplorerProviderProps> = ({ children }) => {
       await Promise.all(files.map((file) => remove(file.path)));
 
       // On nettoie l'interface
-      setFiles((prev) => prev.filter((f) => !files.includes(f)));
+      setFiles((prevFiles) =>
+        prevFiles.filter(
+          (f) => !files.map((file) => file.path).includes(f.path),
+        ),
+      );
       manifest.deleteFiles(files.map((f) => f.name));
     } catch (error) {
       console.error("Erreur lors de la suppression groupée :", error);

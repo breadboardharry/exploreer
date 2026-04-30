@@ -2,6 +2,7 @@ import useExplorer from "@hooks/use-explorer";
 import { FileItemWithMetadata } from "@lib/file/file";
 import { formatSize } from "@lib/utils/file.utils";
 import { ViewMode } from "@view/pages/explorer.page";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@view/ui/tooltip";
 import React from "react";
 import { FilePreview } from "./file-preview";
 import { HighlightedText } from "./highlighted-text";
@@ -83,10 +84,29 @@ const FileCard: React.FC<FileCardProps> = ({
           {/* TAGS */}
           {showTags && file.tags.length > 0 && (
             <div className="flex items-center gap-1 max-w-50 overflow-hidden">
-              {file.tags.map((tag) => {
+              {file.tags.slice(0, 3).map((tag) => {
                 const tagColor = getTagColor(tag);
                 return <TagBadge key={tag} name={tag} color={tagColor} />;
               })}
+              {/* BADGE +x si plus de 3 tags, avec tooltip qui affiche les tags restants */}
+              {file.tags.length > 3 && (
+                <Tooltip>
+                  <TooltipTrigger>
+                    <TagBadge
+                      name={`+${file.tags.length - 3}`}
+                      color={"gray"}
+                      className="shrink-0"
+                      truncate={false}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent className="flex flex-wrap">
+                    {file.tags.slice(3).map((tag) => {
+                      const tagColor = getTagColor(tag);
+                      return <TagBadge key={tag} name={tag} color={tagColor} />;
+                    })}
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </div>
           )}
           {/* DATE */}

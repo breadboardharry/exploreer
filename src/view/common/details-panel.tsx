@@ -1,19 +1,15 @@
 import useExplorer from "@hooks/use-explorer";
 import { FileItemWithMetadata } from "@lib/file/file";
 import { formatSize } from "@lib/utils/file.utils";
+import { Menu, MenuContent, MenuTrigger } from "@view/ui/menu";
 import { useEffect, useState } from "react";
 import { FilePreview } from "./file-preview";
+import { FileTagMenu } from "./file-tag-menu";
 import { TagBadge } from "./tag-badge";
 
 export const DetailsPanel: React.FC = () => {
-  const {
-    filteredFiles,
-    filters,
-    directory,
-    selection,
-    getTagColor,
-    removeFileTags,
-  } = useExplorer();
+  const { filteredFiles, filters, directory, selection, getTagColor } =
+    useExplorer();
   const [selectedFiles, setSelectedFiles] = useState<FileItemWithMetadata[]>(
     [],
   );
@@ -25,10 +21,6 @@ export const DetailsPanel: React.FC = () => {
     console.log("Fichiers sélectionnés mis à jour :", selected);
     setSelectedFiles(selected);
   }, [selection.selectedKeys, filteredFiles]);
-
-  const handleRemoveTag = (file: FileItemWithMetadata, tag: string) => {
-    removeFileTags(file, [tag]);
-  };
 
   return (
     <div className="flex flex-col items-center justify-center">
@@ -82,25 +74,40 @@ export const DetailsPanel: React.FC = () => {
           <div className="w-full px-4 my-2 flex flex-col flex-1">
             <h3 className="w-full mb-2 text-sm font-medium">Tags</h3>
 
-            {selectedFiles[0].tags.length > 0 ? (
-              <ul className="flex flex-wrap gap-2">
-                {selectedFiles[0].tags.map((tag) => (
-                  <li
-                    key={tag}
-                    className="flex items-center justify-between text-sm text-slate-500"
-                  >
-                    <TagBadge
-                      name={tag}
-                      color={getTagColor(tag)}
-                      showRemove
-                      onRemove={() => handleRemoveTag(selectedFiles[0], tag)}
-                    />
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <span className="text-sm text-slate-500">Aucun</span>
-            )}
+            <Menu>
+              <MenuTrigger>
+                <ul className="flex flex-wrap gap-2 cursor-pointer">
+                  {selectedFiles[0].tags.map((tag) => (
+                    <li
+                      key={tag}
+                      className="flex items-center justify-between text-sm text-slate-500"
+                    >
+                      <TagBadge name={tag} color={getTagColor(tag)} />
+                    </li>
+                  ))}
+                </ul>
+              </MenuTrigger>
+
+              <MenuContent
+                side="bottom"
+                sideOffset={-8.5}
+                align="start"
+                alignOffset={-8}
+                positionerOptions={{
+                  collisionAvoidance: {
+                    align: "none",
+                    side: "shift",
+                  },
+                }}
+                style={{
+                  width: "calc(var(--anchor-width) + 16px)",
+                  marginTop: "calc(-1 * var(--anchor-height))",
+                }}
+                className="max-h-96 pt-0 px-0 flex flex-col overflow-x-hidden overflow-y-hidden"
+              >
+                <FileTagMenu file={selectedFiles[0]} />
+              </MenuContent>
+            </Menu>
           </div>
         </>
       ) : (
