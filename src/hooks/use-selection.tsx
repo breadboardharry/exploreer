@@ -48,7 +48,7 @@ export function useSelection<T>(
       } else {
         // --- 3. Clic simple : Sélection unique (ou désélection) ---
         if (selectedKeys.has(key) && selectedKeys.size === 1) {
-          setSelectedKeys(new Set()); // Désélection si c'était le seul
+          // Si l'élément est déjà le seul sélectionné, on ne fait rien (pas de désélection)
         } else {
           setSelectedKeys(new Set([key])); // Remplace toute la sélection par celui-ci
         }

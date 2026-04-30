@@ -7,7 +7,10 @@ import { FilePreview } from "./file-preview";
 import { FileTagMenu } from "./file-tag-menu";
 import { TagBadge } from "./tag-badge";
 
-export const DetailsPanel: React.FC = () => {
+// Type de props : DivHTML
+export interface DetailsPanelProps extends React.HTMLAttributes<HTMLDivElement> {}
+
+export const DetailsPanel: React.FC<DetailsPanelProps> = (props) => {
   const { filteredFiles, filters, directory, selection, getTagColor } =
     useExplorer();
   const [selectedFiles, setSelectedFiles] = useState<FileItemWithMetadata[]>(
@@ -23,7 +26,7 @@ export const DetailsPanel: React.FC = () => {
   }, [selection.selectedKeys, filteredFiles]);
 
   return (
-    <div className="flex flex-col items-center justify-center">
+    <div className="flex flex-col items-center justify-center" {...props}>
       {selectedFiles.length === 0 ? (
         /* ------------------------ AUCUN FICHIER SÉLECTIONNÉ ----------------------- */
         filters.query?.trim() ? (
@@ -75,18 +78,26 @@ export const DetailsPanel: React.FC = () => {
             <h3 className="w-full mb-2 text-sm font-medium">Tags</h3>
 
             <Menu>
-              <MenuTrigger>
-                <ul className="flex flex-wrap gap-2 cursor-pointer">
-                  {selectedFiles[0].tags.map((tag) => (
-                    <li
-                      key={tag}
-                      className="flex items-center justify-between text-sm text-slate-500"
-                    >
-                      <TagBadge name={tag} color={getTagColor(tag)} />
-                    </li>
-                  ))}
-                </ul>
-              </MenuTrigger>
+              {selectedFiles[0].tags.length ? (
+                <MenuTrigger>
+                  <ul className="flex flex-wrap gap-2 cursor-pointer">
+                    {selectedFiles[0].tags.map((tag) => (
+                      <li
+                        key={tag}
+                        className="flex items-center justify-between text-sm text-slate-500"
+                      >
+                        <TagBadge name={tag} color={getTagColor(tag)} />
+                      </li>
+                    ))}
+                  </ul>
+                </MenuTrigger>
+              ) : (
+                <MenuTrigger className="flex justify-start">
+                  <span className="text-xs text-start text-slate-500">
+                    Ajouter un tag
+                  </span>
+                </MenuTrigger>
+              )}
 
               <MenuContent
                 side="bottom"

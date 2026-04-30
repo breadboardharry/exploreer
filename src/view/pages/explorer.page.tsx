@@ -12,7 +12,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@view/ui/resizable";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 
 export type ViewMode = "grid" | "list";
 
@@ -25,6 +25,8 @@ const Explorer: React.FC<ExplorerProps> = () => {
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [viewingIndex, setViewingIndex] = useState<number>(-1);
+
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const isViewerOpen = viewingIndex !== -1;
   const selectedCount = selection.selectedKeys.size;
@@ -63,6 +65,83 @@ const Explorer: React.FC<ExplorerProps> = () => {
       }
     } catch (error) {
       console.error("Erreur lors de la suppression groupée :", error);
+    }
+  };
+
+  const getColumnCount = () => {
+    if (viewMode === "list") return 1;
+
+    const container = containerRef.current;
+    if (!container || container.children.length === 0) return 1;
+
+    const children = container.children;
+    const firstY = (children[0] as HTMLElement).offsetTop;
+
+    // On cherche le premier élément qui est "plus bas" que le premier
+    for (let i = 1; i < children.length; i++) {
+      if ((children[i] as HTMLElement).offsetTop > firstY) {
+        return i; // L'index correspond au nombre exact de colonnes !
+      }
+    }
+
+    // Si tout tient sur une seule ligne
+    return children.length;
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // On ignore les touches si l'utilisateur est en train de taper dans un input (ex: barre de recherche)
+    if (
+      document.activeElement?.tagName === "INPUT" ||
+      document.activeElement?.tagName === "TEXTAREA"
+    )
+      return;
+
+    const keys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+    if (!keys.includes(e.key)) return;
+
+    e.preventDefault(); // Empêche la page entière de scroller quand on utilise les flèches
+
+    // On trouve l'index de départ (le fichier actuellement sélectionné)
+    let currentIndex = 0;
+    if (selection.selectedKeys.size > 0) {
+      // On prend le premier fichier sélectionné comme point de départ
+      const firstSelectedPath = Array.from(selection.selectedKeys)[0];
+      currentIndex = filteredFiles.findIndex(
+        (f) => f.path === firstSelectedPath,
+      );
+    }
+
+    const columns = getColumnCount();
+    let nextIndex = currentIndex;
+
+    // Calcul du prochain index selon la touche
+    if (e.key === "ArrowRight") nextIndex = currentIndex + 1;
+    if (e.key === "ArrowLeft") nextIndex = currentIndex - 1;
+    if (e.key === "ArrowDown") nextIndex = currentIndex + columns;
+    if (e.key === "ArrowUp") nextIndex = currentIndex - columns;
+
+    // Sécurité : On ne déborde pas du tableau
+    if (nextIndex < 0) nextIndex = 0;
+    if (nextIndex >= filteredFiles.length) nextIndex = filteredFiles.length - 1;
+
+    // Si l'index a changé, on met à jour la sélection
+    if (nextIndex !== currentIndex) {
+      // Optionnel : Gestion de la touche Shift pour la sélection multiple au clavier
+      if (e.shiftKey) {
+        selection.toggle(nextIndex, false, true);
+      } else {
+        // Navigation normale : on efface et on sélectionne le nouveau
+        selection.clear();
+        selection.toggle(nextIndex, false, false);
+      }
+
+      // UX : On scroll automatiquement pour que le fichier reste visible
+      const nextElement = containerRef.current?.children[
+        nextIndex
+      ] as HTMLElement;
+      if (nextElement) {
+        nextElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
     }
   };
 
@@ -112,10 +191,16 @@ const Explorer: React.FC<ExplorerProps> = () => {
             ) : (
               /* -------------------------------- RÉSULTATS ------------------------------- */
               <div
+                ref={containerRef}
+                // Permet à la div de capturer les touches du clavier
+                tabIndex={0}
+                // On attache l'écouteur d'événements
+                onKeyDown={handleKeyDown}
                 className={
-                  viewMode === "grid"
+                  "outline-none focus:ring-0 " +
+                  (viewMode === "grid"
                     ? "grid gap-6 grid-cols-[repeat(auto-fill,minmax(140px,1fr))]"
-                    : "flex flex-col gap-2"
+                    : "flex flex-col gap-2")
                 }
                 onClick={selection.clear}
               >
@@ -155,7 +240,15 @@ const Explorer: React.FC<ExplorerProps> = () => {
           {showDetails && (
             <>
               <ResizableHandle />
-              <ResizablePanel defaultSize="25%" minSize="240px" maxSize="50%">
+              <ResizablePanel
+                defaultSize="25%"
+                minSize="240px"
+                maxSize="50%"
+                // Permet à la div de capturer les touches du clavier
+                tabIndex={0}
+                // On attache l'écouteur d'événements
+                onKeyDown={handleKeyDown}
+              >
                 <DetailsPanel />
               </ResizablePanel>
             </>
